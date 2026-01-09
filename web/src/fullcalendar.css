@@ -64,24 +64,16 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
-.fc .fc-timegrid-col {
-  border-right: 1px solid #e2e8f0 !important;
-}
-
 .fc .fc-daygrid-day {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Bordes en las slots de tiempo (franja horaria) */
-.fc-timegrid-slots table tr td {
+/* Bordes verticales en TODAS las celdas del timegrid (vista semanal) */
+.fc-timegrid td {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-.fc-timegrid-slot-lane {
-  border-right: 1px solid #e2e8f0 !important;
-}
-
-/* Bordes en el área de eventos del timegrid */
-.fc-timegrid-cols>table>tbody>tr>td {
-  border-right: 1px solid #e2e8f0 !important;
+/* Excluir el eje de tiempo (columna de horas) del borde derecho */
+.fc-timegrid-axis {
+  border-right: none !important;
 }
