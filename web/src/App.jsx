@@ -18,6 +18,8 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [nombreInput, setNombreInput] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [duration, setDuration] = useState(30);
 
   async function loadRange(info) {
     setLoading(true);
@@ -42,13 +44,33 @@ export default function App() {
   function onSelect(sel) {
     setModalData(sel);
     setNombreInput("");
+
+    // Extraer hora de inicio y calcular duración
+    const start = new Date(sel.start);
+    const end = new Date(sel.end);
+    const hours = String(start.getHours()).padStart(2, '0');
+    const minutes = String(start.getMinutes()).padStart(2, '0');
+    setStartTime(`${hours}:${minutes}`);
+
+    const durationMinutes = (end - start) / (1000 * 60);
+    setDuration(durationMinutes);
+
     setShowModal(true);
   }
 
   async function handleModalConfirm() {
     if (!nombreInput.trim()) return;
 
-    const payload = { nombre: nombreInput.trim(), inicio: toISO(modalData.start), fin: toISO(modalData.end) };
+    // Construir fecha/hora de inicio usando la fecha del calendario + hora personalizada
+    const selectedDate = new Date(modalData.start);
+    const [hours, minutes] = startTime.split(':').map(Number);
+    selectedDate.setHours(hours, minutes, 0, 0);
+
+    // Calcular fecha/hora de fin sumando la duración
+    const endDate = new Date(selectedDate);
+    endDate.setMinutes(endDate.getMinutes() + duration);
+
+    const payload = { nombre: nombreInput.trim(), inicio: toISO(selectedDate), fin: toISO(endDate) };
 
     const r = await fetch(`${API}/api/citas`, {
       method: "POST",
@@ -80,6 +102,8 @@ export default function App() {
     setShowModal(false);
     setModalData(null);
     setNombreInput("");
+    setStartTime("");
+    setDuration(30);
   }
 
   const calendarProps = useMemo(() => ({
@@ -166,6 +190,42 @@ export default function App() {
                 placeholder="Ej: Reunión con Juan"
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="start-time" className="block text-sm font-medium text-slate-700">
+                  Hora de inicio
+                </label>
+                <input
+                  id="start-time"
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="duration" className="block text-sm font-medium text-slate-700">
+                  Duración
+                </label>
+                <select
+                  id="duration"
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                >
+                  <option value={15}>15 min</option>
+                  <option value={30}>30 min</option>
+                  <option value={45}>45 min</option>
+                  <option value={60}>1 hora</option>
+                  <option value={90}>1.5 horas</option>
+                  <option value={120}>2 horas</option>
+                  <option value={150}>2.5 horas</option>
+                  <option value={180}>3 horas</option>
+                </select>
+              </div>
             </div>
 
             <div className="mt-6 flex gap-3">
