@@ -68,21 +68,24 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Líneas verticales en timegrid usando background */
-.fc-timegrid-body {
-  background-image:
-    repeating-linear-gradient(to right,
-      transparent,
-      transparent calc(14.28% - 0.5px),
-      #e2e8f0 calc(14.28% - 0.5px),
-      #e2e8f0 calc(14.28% + 0.5px));
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
+/* Líneas verticales en la zona horaria usando box-shadow en las columnas */
+.fc-timegrid-col {
+  box-shadow: inset -1px 0 0 0 #e2e8f0 !important;
 }
 
-/* Asegurar que el contenido esté por encima del background */
-.fc-timegrid-cols,
-.fc-timegrid-slots {
-  position: relative;
-  z-index: 1;
+/* Alternativamente, bordes en los slots de tiempo */
+.fc-timegrid-slot-lane {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* Forzar bordes en todas las celdas de la tabla del timegrid */
+.fc-scrollgrid-sync-table td {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* Asegurar que la última columna no tenga borde extra */
+.fc-timegrid-col:last-child,
+.fc-timegrid-slot-lane:last-child {
+  box-shadow: none !important;
+  border-right: none !important;
 }
