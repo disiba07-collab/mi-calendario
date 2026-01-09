@@ -47,9 +47,64 @@
 }
 
 .fc .fc-event {
-  border-radius: 0.75rem;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  padding: 2px 6px;
+  border-radius: 0.5rem;
+  border: none;
+  border-left: 3px solid #4f46e5;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  min-height: 22px !important;
+  display: flex;
+  align-items: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fc .fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.4);
+}
+
+/* Eventos en el timegrid (vista semanal) */
+.fc-timegrid-event {
+  min-height: 22px !important;
+  overflow: visible !important;
+}
+
+.fc-timegrid-event .fc-event-main {
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+/* Eventos muy cortos */
+.fc-timegrid-event-short .fc-event-main-frame {
+  flex-direction: row;
+  gap: 4px;
+}
+
+.fc-timegrid-event-short .fc-event-time {
+  font-size: 0.65rem;
+  opacity: 0.9;
+}
+
+.fc-timegrid-event-short .fc-event-title {
+  font-size: 0.65rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Texto del evento */
+.fc-event-title {
+  font-weight: 600;
+}
+
+.fc-event-time {
+  opacity: 0.9;
+  font-size: 0.7rem;
 }
 
 .fc .fc-highlight {
