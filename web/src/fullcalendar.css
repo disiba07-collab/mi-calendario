@@ -46,3 +46,15 @@
 .fc .fc-highlight {
   background: rgba(15, 23, 42, 0.06);
 }
+
+/* Personalizar el indicador de "ahora" (now indicator) */
+.fc-timegrid-now-indicator-line {
+  border-color: rgb(99, 102, 241) !important;
+  border-width: 1.5px !important;
+  opacity: 0.5;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-color: rgb(99, 102, 241) !important;
+  opacity: 0.5;
+}
