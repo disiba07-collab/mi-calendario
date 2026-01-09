@@ -68,24 +68,28 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Líneas verticales en la zona horaria usando box-shadow en las columnas */
-.fc-timegrid-col {
-  box-shadow: inset -1px 0 0 0 #e2e8f0 !important;
-}
+/* FORZAR líneas verticales en la zona horaria - enfoque agresivo */
 
-/* Alternativamente, bordes en los slots de tiempo */
-.fc-timegrid-slot-lane {
+/* Todas las celdas de cualquier tabla dentro del scrollgrid */
+.fc-scrollgrid td,
+.fc-scrollgrid th {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Forzar bordes en todas las celdas de la tabla del timegrid */
-.fc-scrollgrid-sync-table td {
+/* Específicamente las celdas de la zona horaria */
+.fc-timegrid-body td,
+.fc-timegrid-slots td,
+.fc-timegrid-cols td {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Asegurar que la última columna no tenga borde extra */
-.fc-timegrid-col:last-child,
-.fc-timegrid-slot-lane:last-child {
-  box-shadow: none !important;
-  border-right: none !important;
+/* Las columnas individuales de cada día */
+.fc-timegrid-col-frame {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* Outline como alternativa (más difícil de sobrescribir) */
+.fc-timegrid-col:not(:last-child) .fc-timegrid-col-frame {
+  outline: solid #e2e8f0;
+  outline-width: 0 1px 0 0;
 }
