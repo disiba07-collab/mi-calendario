@@ -68,12 +68,21 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Bordes verticales en TODAS las celdas del timegrid (vista semanal) */
-.fc-timegrid td {
-  border-right: 1px solid #e2e8f0 !important;
+/* Líneas verticales en timegrid usando background */
+.fc-timegrid-body {
+  background-image:
+    repeating-linear-gradient(to right,
+      transparent,
+      transparent calc(14.28% - 0.5px),
+      #e2e8f0 calc(14.28% - 0.5px),
+      #e2e8f0 calc(14.28% + 0.5px));
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
-/* Excluir el eje de tiempo (columna de horas) del borde derecho */
-.fc-timegrid-axis {
-  border-right: none !important;
+/* Asegurar que el contenido esté por encima del background */
+.fc-timegrid-cols,
+.fc-timegrid-slots {
+  position: relative;
+  z-index: 1;
 }
