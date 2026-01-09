@@ -61,13 +61,22 @@
 
 /* Bordes verticales entre columnas de días para mejor claridad */
 .fc .fc-col-header-cell {
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 .fc .fc-timegrid-col {
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 .fc .fc-daygrid-day {
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* Asegurar bordes en vista semanal (timegrid) */
+.fc-timegrid .fc-scrollgrid-sync-table td {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+.fc-timegrid-body .fc-timegrid-col-frame {
+  border-right: 1px solid #e2e8f0 !important;
 }
