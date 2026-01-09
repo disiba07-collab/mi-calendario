@@ -26,9 +26,18 @@
   border-color: #0f172a;
 }
 
-.fc .fc-timegrid-slot,
 .fc .fc-daygrid-day-frame {
   background: #fff;
+}
+
+/* SOLUCIÓN: Hacer slots transparentes para revelar las líneas verticales de las columnas */
+.fc-timegrid-slot-lane {
+  background-color: transparent !important;
+}
+
+/* El fondo blanco va en el body, no en los slots */
+.fc-timegrid-body {
+  background-color: #fff;
 }
 
 .fc .fc-timegrid-axis-cushion,
@@ -68,28 +77,12 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* FORZAR líneas verticales en la zona horaria - enfoque agresivo */
-
-/* Todas las celdas de cualquier tabla dentro del scrollgrid */
-.fc-scrollgrid td,
-.fc-scrollgrid th {
+/* FORZAR líneas verticales en las columnas de días */
+.fc-timegrid-col {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Específicamente las celdas de la zona horaria */
-.fc-timegrid-body td,
-.fc-timegrid-slots td,
-.fc-timegrid-cols td {
-  border-right: 1px solid #e2e8f0 !important;
-}
-
-/* Las columnas individuales de cada día */
-.fc-timegrid-col-frame {
-  border-right: 1px solid #e2e8f0 !important;
-}
-
-/* Outline como alternativa (más difícil de sobrescribir) */
-.fc-timegrid-col:not(:last-child) .fc-timegrid-col-frame {
-  outline: solid #e2e8f0;
-  outline-width: 0 1px 0 0;
+/* Quitar borde de la última columna */
+.fc-timegrid-col:last-child {
+  border-right: none !important;
 }
