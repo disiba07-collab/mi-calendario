@@ -3,6 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import esLocale from '@fullcalendar/core/locales/es';
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -72,13 +73,21 @@ export default function App() {
     nowIndicator: true,
     slotMinTime: "08:00:00",
     slotMaxTime: "20:00:00",
+    locale: esLocale,
+    buttonText: {
+      today: 'Hoy',
+      month: 'Mes',
+      week: 'Semana',
+      day: 'Día',
+      list: 'Lista'
+    },
     headerToolbar: { left: "prev,next today", center: "title", right: "timeGridWeek,dayGridMonth" }
   }), [events]);
 
   const toastClass =
     toast?.type === "ok" ? "border-green-200 bg-green-50 text-green-900" :
-    toast?.type === "warn" ? "border-amber-200 bg-amber-50 text-amber-900" :
-    "border-red-200 bg-red-50 text-red-900";
+      toast?.type === "warn" ? "border-amber-200 bg-amber-50 text-amber-900" :
+        "border-red-200 bg-red-50 text-red-900";
 
   return (
     <div className="min-h-screen bg-slate-50">
