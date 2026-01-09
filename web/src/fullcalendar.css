@@ -58,3 +58,16 @@
   border-color: rgb(99, 102, 241) !important;
   opacity: 0.5;
 }
+
+/* Bordes verticales entre columnas de días para mejor claridad */
+.fc .fc-col-header-cell {
+  border-right: 1px solid #e2e8f0;
+}
+
+.fc .fc-timegrid-col {
+  border-right: 1px solid #e2e8f0;
+}
+
+.fc .fc-daygrid-day {
+  border-right: 1px solid #e2e8f0;
+}
