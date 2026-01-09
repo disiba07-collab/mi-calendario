@@ -72,11 +72,16 @@
   border-right: 1px solid #e2e8f0 !important;
 }
 
-/* Asegurar bordes en vista semanal (timegrid) */
-.fc-timegrid .fc-scrollgrid-sync-table td {
+/* Bordes en las slots de tiempo (franja horaria) */
+.fc-timegrid-slots table tr td {
   border-right: 1px solid #e2e8f0 !important;
 }
 
-.fc-timegrid-body .fc-timegrid-col-frame {
+.fc-timegrid-slot-lane {
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+/* Bordes en el área de eventos del timegrid */
+.fc-timegrid-cols>table>tbody>tr>td {
   border-right: 1px solid #e2e8f0 !important;
 }
