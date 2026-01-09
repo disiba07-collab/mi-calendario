@@ -20,6 +20,7 @@ export default function App() {
   const [nombreInput, setNombreInput] = useState("");
   const [startTime, setStartTime] = useState("");
   const [duration, setDuration] = useState(30);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   async function loadRange(info) {
     setLoading(true);
@@ -106,12 +107,40 @@ export default function App() {
     setDuration(30);
   }
 
+  function onEventClick(info) {
+    const event = info.event;
+    setSelectedEvent({
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end
+    });
+  }
+
+  function formatDate(date) {
+    return new Date(date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function formatTime(date) {
+    return new Date(date).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function getDuration(start, end) {
+    const diffMs = new Date(end) - new Date(start);
+    const minutes = Math.round(diffMs / 60000);
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
+
   const calendarProps = useMemo(() => ({
     plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
     initialView: "timeGridWeek",
     selectable: true,
     selectMirror: true,
     select: onSelect,
+    eventClick: onEventClick,
     events,
     datesSet: loadRange,
     height: "auto",
@@ -246,6 +275,79 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Modal de detalle de cita */}
+      {selectedEvent && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setSelectedEvent(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">{selectedEvent.title}</h3>
+                  <p className="text-sm text-slate-500 capitalize">{formatDate(selectedEvent.start)}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Horario</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {formatTime(selectedEvent.start)} - {formatTime(selectedEvent.end)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100 text-green-600">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-slate-500">Duración</p>
+                  <p className="text-sm font-semibold text-slate-900">{getDuration(selectedEvent.start, selectedEvent.end)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
