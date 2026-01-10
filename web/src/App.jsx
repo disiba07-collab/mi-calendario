@@ -45,6 +45,21 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Modo oscuro
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
   async function loadRange(info) {
     setLoading(true);
     try {
@@ -322,22 +337,46 @@ export default function App() {
   }), [events, isMobile]);
 
   const toastClass =
-    toast?.type === "ok" ? "border-green-200 bg-green-50 text-green-900" :
-      toast?.type === "warn" ? "border-amber-200 bg-amber-50 text-amber-900" :
-        "border-red-200 bg-red-50 text-red-900";
+    toast?.type === "ok" ? "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300" :
+      toast?.type === "warn" ? "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300" :
+        "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className={`min-h-screen transition-colors ${darkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Calendario de citas</h1>
-            <p className="mt-1 text-sm text-slate-600">Selecciona una franja (día/hora) para reservar.</p>
+            <h1 className={`text-2xl font-semibold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>Calendario de citas</h1>
+            <p className={`mt-1 text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Selecciona una franja (día/hora) para reservar.</p>
           </div>
 
           <div className="flex items-center gap-3">
-            {loading && <span className="text-sm text-slate-600">Cargando…</span>}
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+            {loading && <span className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>Cargando…</span>}
+
+            {/* Toggle modo oscuro */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`rounded-full p-2 transition-colors ${darkMode
+                ? 'bg-slate-700 text-yellow-400 hover:bg-slate-600'
+                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {darkMode ? (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${darkMode
+              ? 'border-slate-600 bg-slate-800 text-slate-300'
+              : 'border-slate-200 bg-white text-slate-700'
+              }`}>
               Online
             </span>
           </div>
@@ -349,7 +388,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className={`mt-6 rounded-2xl border p-4 shadow-sm transition-colors ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
           <FullCalendar {...calendarProps} />
         </div>
 

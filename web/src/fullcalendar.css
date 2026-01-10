@@ -327,3 +327,84 @@
     font-size: 0.55rem !important;
   }
 }
+
+/* ========================================
+   MODO OSCURO
+   ======================================== */
+
+.dark .fc {
+  --fc-border-color: #334155;
+  --fc-page-bg-color: #1e293b;
+}
+
+.dark .fc .fc-toolbar-title {
+  color: #f1f5f9 !important;
+}
+
+.dark .fc .fc-button {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .fc .fc-button:hover {
+  background: #475569 !important;
+}
+
+.dark .fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: #6366f1 !important;
+  border-color: #6366f1 !important;
+}
+
+.dark .fc .fc-daygrid-day-frame,
+.dark .fc-timegrid-body {
+  background: #1e293b !important;
+}
+
+.dark .fc .fc-timegrid-axis-cushion,
+.dark .fc .fc-col-header-cell-cushion {
+  color: #94a3b8 !important;
+}
+
+.dark .fc .fc-daygrid-day-number {
+  color: #cbd5e1 !important;
+}
+
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th {
+  border-color: #334155 !important;
+}
+
+.dark .fc .fc-highlight {
+  background: rgba(99, 102, 241, 0.15) !important;
+}
+
+.dark .fc-timegrid-now-indicator-line {
+  border-color: #818cf8 !important;
+}
+
+.dark .fc-popover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.dark .fc-popover-header {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .fc-more-link {
+  color: #818cf8 !important;
+}
+
+.dark .fc-scrollgrid {
+  border-color: #334155 !important;
+}
+
+.dark .fc .fc-timegrid-slot-lane {
+  border-color: #334155 !important;
+}
+
+.dark .fc-timegrid-col {
+  border-color: #334155 !important;
+}
