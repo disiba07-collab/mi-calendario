@@ -213,6 +213,10 @@ export default function App() {
     expandRows: true,
     slotEventOverlap: false,
     eventMaxStack: 3,
+    // Vista de mes: limitar eventos visibles y mostrar "+N más"
+    dayMaxEvents: 3,
+    moreLinkText: (n) => `+${n} más`,
+    moreLinkClick: "popover",
     locale: esLocale,
     buttonText: {
       today: 'Hoy',
