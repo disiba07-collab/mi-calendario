@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -23,6 +23,17 @@ export default function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedColor, setSelectedColor] = useState("#6366f1");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [goToDate, setGoToDate] = useState("");
+  const calendarRef = useRef(null);
+
+  // Navegar a una fecha específica
+  function handleGoToDate(dateStr) {
+    setGoToDate(dateStr);
+    if (dateStr && calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.gotoDate(dateStr);
+    }
+  }
 
   // Paleta de colores para citas
   const colorOptions = [
@@ -388,8 +399,34 @@ export default function App() {
           </div>
         )}
 
-        <div className={`mt-6 rounded-2xl border p-4 shadow-sm transition-colors ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
-          <FullCalendar {...calendarProps} />
+        {/* Selector de fecha para navegar */}
+        <div className={`mt-4 flex items-center gap-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+          <label htmlFor="goto-date" className="text-sm font-medium">
+            Ir a fecha:
+          </label>
+          <input
+            id="goto-date"
+            type="date"
+            value={goToDate}
+            onChange={(e) => handleGoToDate(e.target.value)}
+            className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${darkMode
+                ? 'border-slate-600 bg-slate-700 text-white'
+                : 'border-slate-300 bg-white text-slate-900'
+              }`}
+          />
+          <button
+            onClick={() => handleGoToDate(new Date().toISOString().split('T')[0])}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${darkMode
+                ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
+          >
+            Hoy
+          </button>
+        </div>
+
+        <div className={`mt-4 rounded-2xl border p-4 shadow-sm transition-colors ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
+          <FullCalendar ref={calendarRef} {...calendarProps} />
         </div>
 
         <p className="mt-4 text-xs text-slate-500">
