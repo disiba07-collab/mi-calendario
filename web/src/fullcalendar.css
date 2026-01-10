@@ -209,3 +209,112 @@
   margin: 4px 0 !important;
   border-radius: 0.375rem !important;
 }
+
+/* ========================================
+   ESTILOS RESPONSIVE PARA MÓVIL
+   ======================================== */
+
+@media (max-width: 640px) {
+
+  /* Toolbar: apilar elementos en columna */
+  .fc .fc-toolbar {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    padding: 0.5rem 0 !important;
+  }
+
+  .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    text-align: center;
+    order: -1;
+  }
+
+  /* Botones más compactos */
+  .fc .fc-button {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  .fc .fc-button-group {
+    gap: 2px;
+  }
+
+  /* Cabecera de días más compacta */
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.65rem !important;
+    padding: 4px 2px !important;
+  }
+
+  /* Horas más pequeñas */
+  .fc .fc-timegrid-axis-cushion {
+    font-size: 0.6rem !important;
+    padding: 2px !important;
+  }
+
+  /* Eventos más compactos en móvil */
+  .fc .fc-event {
+    padding: 1px 4px !important;
+    font-size: 0.6rem !important;
+    min-height: 14px !important;
+    border-left-width: 2px !important;
+  }
+
+  .fc-timegrid-event .fc-event-main {
+    padding: 1px 3px !important;
+    font-size: 0.55rem !important;
+  }
+
+  /* Popover ocupa más ancho en móvil */
+  .fc-popover {
+    min-width: 200px !important;
+    max-width: 90vw !important;
+  }
+
+  .fc-popover-header {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .fc-popover-body {
+    max-height: 250px !important;
+  }
+
+  /* Enlace "+N más" más pequeño */
+  .fc-more-link {
+    font-size: 0.65rem !important;
+    padding: 1px 3px !important;
+  }
+
+  /* Vista de mes: celdas más compactas */
+  .fc-daygrid-day-number {
+    font-size: 0.75rem !important;
+    padding: 4px !important;
+  }
+
+  .fc-daygrid-event {
+    font-size: 0.6rem !important;
+  }
+}
+
+/* Pantallas muy pequeñas (menos de 400px) */
+@media (max-width: 400px) {
+  .fc .fc-toolbar-title {
+    font-size: 0.875rem !important;
+  }
+
+  .fc .fc-button {
+    padding: 0.25rem 0.4rem !important;
+    font-size: 0.65rem !important;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.55rem !important;
+  }
+}
