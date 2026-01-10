@@ -309,6 +309,26 @@ export default function App() {
     setShowModal(true);
   }
 
+  // Duplicar cita existente
+  function handleDuplicateEvent() {
+    if (!selectedEvent) return;
+
+    const start = new Date(selectedEvent.start);
+    const end = new Date(selectedEvent.end);
+    const hours = String(start.getHours()).padStart(2, '0');
+    const minutes = String(start.getMinutes()).padStart(2, '0');
+    const durationMinutes = (end - start) / (1000 * 60);
+
+    // Crear nueva cita (sin isEdit) con los mismos datos
+    setModalData({ start: selectedEvent.start, end: selectedEvent.end, isEdit: false });
+    setNombreInput(selectedEvent.title + " (copia)");
+    setStartTime(`${hours}:${minutes}`);
+    setDuration(durationMinutes);
+    setSelectedColor(selectedEvent.color || "#6366f1");
+    setSelectedEvent(null);
+    setShowModal(true);
+  }
+
   const calendarProps = useMemo(() => ({
     plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
     initialView: isMobile ? "timeGridThreeDay" : "timeGridWeek",
@@ -448,8 +468,8 @@ export default function App() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`w-full rounded-lg border pl-10 pr-8 py-1.5 text-sm transition-colors ${darkMode
-                  ? 'border-slate-600 bg-slate-700 text-white placeholder:text-slate-400'
-                  : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
+                ? 'border-slate-600 bg-slate-700 text-white placeholder:text-slate-400'
+                : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
                 }`}
             />
             {searchQuery && (
@@ -649,6 +669,12 @@ export default function App() {
                 className="flex-1 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
               >
                 Editar
+              </button>
+              <button
+                onClick={handleDuplicateEvent}
+                className="flex-1 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-2.5 text-sm font-medium text-cyan-700 transition-colors hover:bg-cyan-100"
+              >
+                Duplicar
               </button>
               <button
                 onClick={handleDeleteEvent}
