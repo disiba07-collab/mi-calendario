@@ -73,8 +73,13 @@ export default function App() {
 
     const payload = { nombre: nombreInput.trim(), inicio: toISO(selectedDate), fin: toISO(endDate) };
 
-    const r = await fetch(`${API}/api/citas`, {
-      method: "POST",
+    // Si es edición, usar PUT en lugar de POST
+    const isEdit = modalData.isEdit;
+    const url = isEdit ? `${API}/api/citas/${modalData.editId}` : `${API}/api/citas`;
+    const method = isEdit ? "PUT" : "POST";
+
+    const r = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
@@ -85,17 +90,29 @@ export default function App() {
     }
     if (!r.ok) {
       setShowModal(false);
-      return setToast({ type: "error", text: "Error creando la cita." });
+      return setToast({ type: "error", text: isEdit ? "Error editando la cita." : "Error creando la cita." });
     }
 
-    setEvents(prev => prev.concat([{
-      id: crypto.randomUUID(),
-      title: nombreInput.trim(),
-      start: payload.inicio,
-      end: payload.fin
-    }]));
+    if (isEdit) {
+      // Actualizar el evento existente
+      setEvents(prev => prev.map(e =>
+        e.id === modalData.editId
+          ? { ...e, title: nombreInput.trim(), start: payload.inicio, end: payload.fin }
+          : e
+      ));
+      setToast({ type: "ok", text: "Cita actualizada." });
+    } else {
+      // Crear nuevo evento
+      setEvents(prev => prev.concat([{
+        id: crypto.randomUUID(),
+        title: nombreInput.trim(),
+        start: payload.inicio,
+        end: payload.fin
+      }]));
+      setToast({ type: "ok", text: "Cita creada." });
+    }
+
     setShowModal(false);
-    setToast({ type: "ok", text: "Cita creada." });
     setTimeout(() => setToast(null), 2500);
   }
 
@@ -132,6 +149,51 @@ export default function App() {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
+
+  async function handleDeleteEvent() {
+    if (!selectedEvent) return;
+
+    const confirmDelete = window.confirm("¿Estás seguro de que quieres eliminar esta cita?");
+    if (!confirmDelete) return;
+
+    try {
+      const r = await fetch(`${API}/api/citas/${selectedEvent.id}`, {
+        method: "DELETE",
+      });
+
+      if (!r.ok) {
+        setToast({ type: "error", text: "Error eliminando la cita." });
+        setSelectedEvent(null);
+        return;
+      }
+
+      setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
+      setSelectedEvent(null);
+      setToast({ type: "ok", text: "Cita eliminada." });
+      setTimeout(() => setToast(null), 2500);
+    } catch {
+      setToast({ type: "error", text: "Error de conexión." });
+      setSelectedEvent(null);
+    }
+  }
+
+  function handleEditEvent() {
+    if (!selectedEvent) return;
+
+    // Pre-rellenar el modal de creación con los datos del evento
+    const start = new Date(selectedEvent.start);
+    const end = new Date(selectedEvent.end);
+    const hours = String(start.getHours()).padStart(2, '0');
+    const minutes = String(start.getMinutes()).padStart(2, '0');
+    const durationMinutes = (end - start) / (1000 * 60);
+
+    setModalData({ start: selectedEvent.start, end: selectedEvent.end, isEdit: true, editId: selectedEvent.id });
+    setNombreInput(selectedEvent.title);
+    setStartTime(`${hours}:${minutes}`);
+    setDuration(durationMinutes);
+    setSelectedEvent(null);
+    setShowModal(true);
   }
 
   const calendarProps = useMemo(() => ({
@@ -201,8 +263,8 @@ export default function App() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="text-lg font-semibold text-slate-900">Nueva cita</h3>
-            <p className="mt-1 text-sm text-slate-600">Introduce el nombre para la cita.</p>
+            <h3 className="text-lg font-semibold text-slate-900">{modalData?.isEdit ? 'Editar cita' : 'Nueva cita'}</h3>
+            <p className="mt-1 text-sm text-slate-600">{modalData?.isEdit ? 'Modifica los datos de la cita.' : 'Introduce el nombre para la cita.'}</p>
 
             <div className="mt-4">
               <label htmlFor="nombre-cita" className="block text-sm font-medium text-slate-700">
@@ -271,7 +333,7 @@ export default function App() {
                 disabled={!nombreInput.trim()}
                 className="flex-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Crear cita
+                {modalData?.isEdit ? 'Guardar cambios' : 'Crear cita'}
               </button>
             </div>
           </div>
@@ -338,7 +400,22 @@ export default function App() {
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={handleEditEvent}
+                className="flex-1 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
+              >
+                Editar
+              </button>
+              <button
+                onClick={handleDeleteEvent}
+                className="flex-1 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100"
+              >
+                Eliminar
+              </button>
+            </div>
+
+            <div className="mt-3">
               <button
                 onClick={() => setSelectedEvent(null)}
                 className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"

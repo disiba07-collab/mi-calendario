@@ -69,6 +69,43 @@ app.post("/api/citas", async (req, res) => {
   }
 });
 
+// Actualizar cita
+app.put("/api/citas/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { inicio, fin, nombre } = req.body;
+    if (!inicio || !fin || !nombre) return res.status(400).json({ error: "inicio, fin, nombre son obligatorios" });
+
+    // Verificar solape excluyendo la cita actual
+    const overlap = await base(TABLE).select({
+      maxRecords: 1,
+      filterByFormula: `AND(
+        RECORD_ID() != "${id}",
+        IS_BEFORE({inicio}, "${fin}"),
+        IS_AFTER({fin}, "${inicio}")
+      )`
+    }).firstPage();
+
+    if (overlap.length) return res.status(409).json({ error: "Hueco ocupado" });
+
+    await base(TABLE).update([{ id, fields: { inicio, fin, nombre } }]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: "Error actualizando cita", detail: String(e) });
+  }
+});
+
+// Eliminar cita
+app.delete("/api/citas/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await base(TABLE).destroy([id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: "Error eliminando cita", detail: String(e) });
+  }
+});
+
 app.listen(process.env.PORT || 3000, () => {
   console.log("API escuchando en puerto", process.env.PORT || 3000);
 });
