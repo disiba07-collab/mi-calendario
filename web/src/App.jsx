@@ -25,6 +25,7 @@ export default function App() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [goToDate, setGoToDate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isBlockMode, setIsBlockMode] = useState(false);
   const calendarRef = useRef(null);
 
   // Filtrar eventos por nombre
@@ -84,14 +85,18 @@ export default function App() {
       const to = info.endStr;
       const r = await fetch(`${API}/api/citas?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
       const data = await r.json();
-      setEvents((data || []).map(c => ({
-        id: c.id,
-        title: c.nombre,
-        start: c.inicio,
-        end: c.fin,
-        backgroundColor: c.color || "#6366f1",
-        borderColor: c.color || "#6366f1"
-      })));
+      setEvents((data || []).map(c => {
+        const isBlock = c.tipo === "bloqueo";
+        return {
+          id: c.id,
+          title: isBlock ? "🔒 No disponible" : c.nombre,
+          start: c.inicio,
+          end: c.fin,
+          backgroundColor: isBlock ? "#64748b" : (c.color || "#6366f1"),
+          borderColor: isBlock ? "#475569" : (c.color || "#6366f1"),
+          extendedProps: { tipo: c.tipo || "cita" }
+        };
+      }));
     } catch {
       setToast({ type: "error", text: "No se pudieron cargar las citas." });
     } finally {
@@ -102,6 +107,7 @@ export default function App() {
   function onSelect(sel) {
     setModalData(sel);
     setNombreInput("");
+    setIsBlockMode(false);
 
     // Extraer hora de inicio y calcular duración
     const start = new Date(sel.start);
@@ -117,7 +123,8 @@ export default function App() {
   }
 
   async function handleModalConfirm() {
-    if (!nombreInput.trim()) return;
+    // Para citas, el nombre es obligatorio. Para bloqueos, no.
+    if (!isBlockMode && !nombreInput.trim()) return;
 
     // Construir fecha/hora de inicio usando la fecha del calendario + hora personalizada
     const selectedDate = new Date(modalData.start);
@@ -129,11 +136,12 @@ export default function App() {
     endDate.setMinutes(endDate.getMinutes() + duration);
 
     const payload = {
-      nombre: nombreInput.trim(),
       inicio: toISO(selectedDate),
       fin: toISO(endDate),
-      color: selectedColor
+      tipo: isBlockMode ? "bloqueo" : "cita",
+      color: isBlockMode ? "#64748b" : selectedColor
     };
+    if (!isBlockMode) payload.nombre = nombreInput.trim();
 
     // Si es edición, usar PUT en lugar de POST
     const isEdit = modalData.isEdit;
@@ -152,7 +160,7 @@ export default function App() {
     }
     if (!r.ok) {
       setShowModal(false);
-      return setToast({ type: "error", text: isEdit ? "Error editando la cita." : "Error creando la cita." });
+      return setToast({ type: "error", text: isEdit ? "Error editando." : (isBlockMode ? "Error bloqueando horario." : "Error creando la cita.") });
     }
 
     if (isEdit) {
@@ -166,18 +174,21 @@ export default function App() {
     } else {
       // Crear nuevo evento
       const data = await r.json();
+      const bgColor = isBlockMode ? "#64748b" : selectedColor;
       setEvents(prev => prev.concat([{
         id: data.id || crypto.randomUUID(),
-        title: nombreInput.trim(),
+        title: isBlockMode ? "🔒 No disponible" : nombreInput.trim(),
         start: payload.inicio,
         end: payload.fin,
-        backgroundColor: selectedColor,
-        borderColor: selectedColor
+        backgroundColor: bgColor,
+        borderColor: isBlockMode ? "#475569" : bgColor,
+        extendedProps: { tipo: isBlockMode ? "bloqueo" : "cita" }
       }]));
-      setToast({ type: "ok", text: "Cita creada." });
+      setToast({ type: "ok", text: isBlockMode ? "Horario bloqueado." : "Cita creada." });
     }
 
     setShowModal(false);
+    setIsBlockMode(false);
     setTimeout(() => setToast(null), 2500);
   }
 
@@ -188,6 +199,7 @@ export default function App() {
     setStartTime("");
     setDuration(30);
     setSelectedColor("#6366f1");
+    setIsBlockMode(false);
   }
 
   function onEventClick(info) {
@@ -504,27 +516,60 @@ export default function App() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <h3 className="text-lg font-semibold text-slate-900">{modalData?.isEdit ? 'Editar cita' : 'Nueva cita'}</h3>
-            <p className="mt-1 text-sm text-slate-600">{modalData?.isEdit ? 'Modifica los datos de la cita.' : 'Introduce el nombre para la cita.'}</p>
+            <h3 className="text-lg font-semibold text-slate-900">
+              {modalData?.isEdit ? 'Editar cita' : (isBlockMode ? 'Bloquear horario' : 'Nueva cita')}
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              {modalData?.isEdit ? 'Modifica los datos de la cita.' : (isBlockMode ? 'Selecciona el horario a bloquear.' : 'Introduce el nombre para la cita.')}
+            </p>
 
-            <div className="mt-4">
-              <label htmlFor="nombre-cita" className="block text-sm font-medium text-slate-700">
-                Nombre
-              </label>
-              <input
-                id="nombre-cita"
-                type="text"
-                autoFocus
-                value={nombreInput}
-                onChange={(e) => setNombreInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && nombreInput.trim()) handleModalConfirm();
-                  if (e.key === 'Escape') handleModalCancel();
-                }}
-                placeholder="Ej: Reunión con Juan"
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
+            {/* Toggle Cita / Bloqueo (solo para crear nuevo) */}
+            {!modalData?.isEdit && (
+              <div className="mt-4 flex rounded-lg bg-slate-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => setIsBlockMode(false)}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${!isBlockMode
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                >
+                  📅 Cita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsBlockMode(true)}
+                  className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isBlockMode
+                    ? 'bg-white text-slate-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                >
+                  🔒 Bloquear
+                </button>
+              </div>
+            )}
+
+            {/* Campo nombre - solo para citas */}
+            {!isBlockMode && (
+              <div className="mt-4">
+                <label htmlFor="nombre-cita" className="block text-sm font-medium text-slate-700">
+                  Nombre
+                </label>
+                <input
+                  id="nombre-cita"
+                  type="text"
+                  autoFocus
+                  value={nombreInput}
+                  onChange={(e) => setNombreInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && nombreInput.trim()) handleModalConfirm();
+                    if (e.key === 'Escape') handleModalCancel();
+                  }}
+                  placeholder="Ej: Reunión con Juan"
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+            )}
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div>
@@ -562,27 +607,29 @@ export default function App() {
               </div>
             </div>
 
-            {/* Selector de color */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Color
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    onClick={() => setSelectedColor(color.value)}
-                    className={`w-8 h-8 rounded-full transition-all ${selectedColor === color.value
-                      ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
-                      : 'hover:scale-105'
-                      }`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  />
-                ))}
+            {/* Selector de color - solo para citas */}
+            {!isBlockMode && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Color
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {colorOptions.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      onClick={() => setSelectedColor(color.value)}
+                      className={`w-8 h-8 rounded-full transition-all ${selectedColor === color.value
+                        ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
+                        : 'hover:scale-105'
+                        }`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-6 flex gap-3">
               <button
@@ -593,10 +640,13 @@ export default function App() {
               </button>
               <button
                 onClick={handleModalConfirm}
-                disabled={!nombreInput.trim()}
-                className="flex-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!isBlockMode && !nombreInput.trim()}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${isBlockMode
+                    ? 'bg-slate-600 hover:bg-slate-700 focus:ring-slate-500/50'
+                    : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500/50'
+                  }`}
               >
-                {modalData?.isEdit ? 'Guardar cambios' : 'Crear cita'}
+                {modalData?.isEdit ? 'Guardar cambios' : (isBlockMode ? 'Bloquear' : 'Crear cita')}
               </button>
             </div>
           </div>

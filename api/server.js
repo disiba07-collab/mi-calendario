@@ -38,8 +38,9 @@ app.get("/api/citas", async (req, res) => {
       id: r.id,
       inicio: r.get("inicio"),
       fin: r.get("fin"),
-      nombre: r.get("nombre"),
-      color: r.get("color") || "#6366f1"
+      nombre: r.get("nombre") || "Bloqueado",
+      color: r.get("color") || "#6366f1",
+      tipo: r.get("tipo") || "cita"
     })));
   } catch (e) {
     res.status(500).json({ error: "Error listando citas", detail: String(e) });
@@ -49,8 +50,9 @@ app.get("/api/citas", async (req, res) => {
 // Crear cita (con anti-solape simple)
 app.post("/api/citas", async (req, res) => {
   try {
-    const { inicio, fin, nombre } = req.body;
-    if (!inicio || !fin || !nombre) return res.status(400).json({ error: "inicio, fin, nombre son obligatorios" });
+    const { inicio, fin, nombre, tipo = "cita" } = req.body;
+    if (!inicio || !fin) return res.status(400).json({ error: "inicio y fin son obligatorios" });
+    if (tipo === "cita" && !nombre) return res.status(400).json({ error: "nombre es obligatorio para citas" });
 
     // Solape: (inicio < fin_existente) AND (fin > inicio_existente)
     const overlap = await base(TABLE).select({
@@ -63,8 +65,11 @@ app.post("/api/citas", async (req, res) => {
 
     if (overlap.length) return res.status(409).json({ error: "Hueco ocupado" });
 
-    const { color = "#6366f1" } = req.body;
-    const created = await base(TABLE).create([{ fields: { inicio, fin, nombre, color } }]);
+    const { color = tipo === "bloqueo" ? "#64748b" : "#6366f1" } = req.body;
+    const fields = { inicio, fin, tipo, color };
+    if (nombre) fields.nombre = nombre;
+
+    const created = await base(TABLE).create([{ fields }]);
     res.status(201).json({ id: created[0].id });
   } catch (e) {
     res.status(500).json({ error: "Error creando cita", detail: String(e) });
