@@ -362,7 +362,8 @@
 }
 
 .dark .fc .fc-timegrid-axis-cushion,
-.dark .fc .fc-col-header-cell-cushion {
+.dark .fc .fc-col-header-cell-cushion,
+.dark .fc .fc-timegrid-slot-label-cushion {
   color: #94a3b8 !important;
 }
 
