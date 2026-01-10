@@ -21,6 +21,20 @@ export default function App() {
   const [startTime, setStartTime] = useState("");
   const [duration, setDuration] = useState(30);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedColor, setSelectedColor] = useState("#6366f1");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Paleta de colores para citas
+  const colorOptions = [
+    { value: "#6366f1", name: "Índigo" },
+    { value: "#10b981", name: "Verde" },
+    { value: "#f59e0b", name: "Naranja" },
+    { value: "#ef4444", name: "Rojo" },
+    { value: "#8b5cf6", name: "Violeta" },
+    { value: "#06b6d4", name: "Cyan" },
+    { value: "#ec4899", name: "Rosa" },
+    { value: "#64748b", name: "Gris" }
+  ];
 
   async function loadRange(info) {
     setLoading(true);
@@ -33,7 +47,9 @@ export default function App() {
         id: c.id,
         title: c.nombre,
         start: c.inicio,
-        end: c.fin
+        end: c.fin,
+        backgroundColor: c.color || "#6366f1",
+        borderColor: c.color || "#6366f1"
       })));
     } catch {
       setToast({ type: "error", text: "No se pudieron cargar las citas." });
@@ -71,7 +87,12 @@ export default function App() {
     const endDate = new Date(selectedDate);
     endDate.setMinutes(endDate.getMinutes() + duration);
 
-    const payload = { nombre: nombreInput.trim(), inicio: toISO(selectedDate), fin: toISO(endDate) };
+    const payload = {
+      nombre: nombreInput.trim(),
+      inicio: toISO(selectedDate),
+      fin: toISO(endDate),
+      color: selectedColor
+    };
 
     // Si es edición, usar PUT en lugar de POST
     const isEdit = modalData.isEdit;
@@ -97,17 +118,20 @@ export default function App() {
       // Actualizar el evento existente
       setEvents(prev => prev.map(e =>
         e.id === modalData.editId
-          ? { ...e, title: nombreInput.trim(), start: payload.inicio, end: payload.fin }
+          ? { ...e, title: nombreInput.trim(), start: payload.inicio, end: payload.fin, backgroundColor: selectedColor, borderColor: selectedColor }
           : e
       ));
       setToast({ type: "ok", text: "Cita actualizada." });
     } else {
       // Crear nuevo evento
+      const data = await r.json();
       setEvents(prev => prev.concat([{
-        id: crypto.randomUUID(),
+        id: data.id || crypto.randomUUID(),
         title: nombreInput.trim(),
         start: payload.inicio,
-        end: payload.fin
+        end: payload.fin,
+        backgroundColor: selectedColor,
+        borderColor: selectedColor
       }]));
       setToast({ type: "ok", text: "Cita creada." });
     }
@@ -122,6 +146,7 @@ export default function App() {
     setNombreInput("");
     setStartTime("");
     setDuration(30);
+    setSelectedColor("#6366f1");
   }
 
   function onEventClick(info) {
@@ -130,7 +155,8 @@ export default function App() {
       id: event.id,
       title: event.title,
       start: event.start,
-      end: event.end
+      end: event.end,
+      color: event.backgroundColor || "#6366f1"
     });
   }
 
@@ -151,11 +177,15 @@ export default function App() {
     return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
   }
 
-  async function handleDeleteEvent() {
+  // Mostrar modal de confirmación para eliminar
+  function handleDeleteEvent() {
     if (!selectedEvent) return;
+    setShowConfirmModal(true);
+  }
 
-    const confirmDelete = window.confirm("¿Estás seguro de que quieres eliminar esta cita?");
-    if (!confirmDelete) return;
+  // Confirmar eliminación
+  async function handleConfirmDelete() {
+    if (!selectedEvent) return;
 
     try {
       const r = await fetch(`${API}/api/citas/${selectedEvent.id}`, {
@@ -165,23 +195,64 @@ export default function App() {
       if (!r.ok) {
         setToast({ type: "error", text: "Error eliminando la cita." });
         setSelectedEvent(null);
+        setShowConfirmModal(false);
         return;
       }
 
       setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
       setSelectedEvent(null);
+      setShowConfirmModal(false);
       setToast({ type: "ok", text: "Cita eliminada." });
       setTimeout(() => setToast(null), 2500);
     } catch {
       setToast({ type: "error", text: "Error de conexión." });
       setSelectedEvent(null);
+      setShowConfirmModal(false);
+    }
+  }
+
+  // Manejar arrastrar y soltar eventos
+  async function handleEventDrop(info) {
+    const event = info.event;
+    const payload = {
+      nombre: event.title,
+      inicio: toISO(event.start),
+      fin: toISO(event.end),
+      color: event.backgroundColor || "#6366f1"
+    };
+
+    try {
+      const r = await fetch(`${API}/api/citas/${event.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (r.status === 409) {
+        info.revert();
+        return setToast({ type: "warn", text: "Ese hueco ya está ocupado." });
+      }
+      if (!r.ok) {
+        info.revert();
+        return setToast({ type: "error", text: "Error moviendo la cita." });
+      }
+
+      setEvents(prev => prev.map(e =>
+        e.id === event.id
+          ? { ...e, start: payload.inicio, end: payload.fin }
+          : e
+      ));
+      setToast({ type: "ok", text: "Cita movida." });
+      setTimeout(() => setToast(null), 2500);
+    } catch {
+      info.revert();
+      setToast({ type: "error", text: "Error de conexión." });
     }
   }
 
   function handleEditEvent() {
     if (!selectedEvent) return;
 
-    // Pre-rellenar el modal de creación con los datos del evento
     const start = new Date(selectedEvent.start);
     const end = new Date(selectedEvent.end);
     const hours = String(start.getHours()).padStart(2, '0');
@@ -192,6 +263,7 @@ export default function App() {
     setNombreInput(selectedEvent.title);
     setStartTime(`${hours}:${minutes}`);
     setDuration(durationMinutes);
+    setSelectedColor(selectedEvent.color || "#6366f1");
     setSelectedEvent(null);
     setShowModal(true);
   }
@@ -201,6 +273,9 @@ export default function App() {
     initialView: "timeGridWeek",
     selectable: true,
     selectMirror: true,
+    editable: true,
+    eventDrop: handleEventDrop,
+    eventResize: handleEventDrop,
     select: onSelect,
     eventClick: onEventClick,
     events,
@@ -327,6 +402,28 @@ export default function App() {
               </div>
             </div>
 
+            {/* Selector de color */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Color
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => setSelectedColor(color.value)}
+                    className={`w-8 h-8 rounded-full transition-all ${selectedColor === color.value
+                      ? 'ring-2 ring-offset-2 ring-slate-400 scale-110'
+                      : 'hover:scale-105'
+                      }`}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+            </div>
+
             <div className="mt-6 flex gap-3">
               <button
                 onClick={handleModalCancel}
@@ -432,7 +529,46 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación para eliminar */}
+      {showConfirmModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowConfirmModal(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">¿Eliminar cita?</h3>
+                <p className="mt-1 text-sm text-slate-500">Esta acción no se puede deshacer.</p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

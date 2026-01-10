@@ -38,7 +38,8 @@ app.get("/api/citas", async (req, res) => {
       id: r.id,
       inicio: r.get("inicio"),
       fin: r.get("fin"),
-      nombre: r.get("nombre")
+      nombre: r.get("nombre"),
+      color: r.get("color") || "#6366f1"
     })));
   } catch (e) {
     res.status(500).json({ error: "Error listando citas", detail: String(e) });
@@ -62,7 +63,8 @@ app.post("/api/citas", async (req, res) => {
 
     if (overlap.length) return res.status(409).json({ error: "Hueco ocupado" });
 
-    const created = await base(TABLE).create([{ fields: { inicio, fin, nombre } }]);
+    const { color = "#6366f1" } = req.body;
+    const created = await base(TABLE).create([{ fields: { inicio, fin, nombre, color } }]);
     res.status(201).json({ id: created[0].id });
   } catch (e) {
     res.status(500).json({ error: "Error creando cita", detail: String(e) });
@@ -88,7 +90,8 @@ app.put("/api/citas/:id", async (req, res) => {
 
     if (overlap.length) return res.status(409).json({ error: "Hueco ocupado" });
 
-    await base(TABLE).update([{ id, fields: { inicio, fin, nombre } }]);
+    const { color = "#6366f1" } = req.body;
+    await base(TABLE).update([{ id, fields: { inicio, fin, nombre, color } }]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: "Error actualizando cita", detail: String(e) });
