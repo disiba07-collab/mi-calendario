@@ -321,7 +321,7 @@ export default function App() {
 
     // Crear nueva cita (sin isEdit) con los mismos datos
     setModalData({ start: selectedEvent.start, end: selectedEvent.end, isEdit: false });
-    setNombreInput(selectedEvent.title + " (copia)");
+    setNombreInput(selectedEvent.title);
     setStartTime(`${hours}:${minutes}`);
     setDuration(durationMinutes);
     setSelectedColor(selectedEvent.color || "#6366f1");
