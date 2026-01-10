@@ -209,6 +209,8 @@ export default function App() {
     nowIndicator: true,
     slotMinTime: "08:00:00",
     slotMaxTime: "20:00:00",
+    slotDuration: "00:15:00",
+    expandRows: true,
     slotEventOverlap: false,
     eventMaxStack: 3,
     locale: esLocale,
