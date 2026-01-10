@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -35,6 +35,15 @@ export default function App() {
     { value: "#ec4899", name: "Rosa" },
     { value: "#64748b", name: "Gris" }
   ];
+
+  // Detectar si es móvil
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   async function loadRange(info) {
     setLoading(true);
@@ -270,7 +279,14 @@ export default function App() {
 
   const calendarProps = useMemo(() => ({
     plugins: [timeGridPlugin, dayGridPlugin, interactionPlugin],
-    initialView: "timeGridWeek",
+    initialView: isMobile ? "timeGridThreeDay" : "timeGridWeek",
+    views: {
+      timeGridThreeDay: {
+        type: 'timeGrid',
+        duration: { days: 3 },
+        buttonText: '3 días'
+      }
+    },
     selectable: true,
     selectMirror: true,
     editable: true,
@@ -284,24 +300,26 @@ export default function App() {
     nowIndicator: true,
     slotMinTime: "08:00:00",
     slotMaxTime: "20:00:00",
-    slotDuration: "00:15:00",
+    slotDuration: isMobile ? "00:30:00" : "00:15:00",
     expandRows: true,
     slotEventOverlap: false,
     eventMaxStack: 3,
     // Vista de mes: limitar eventos visibles y mostrar "+N más"
-    dayMaxEvents: 3,
+    dayMaxEvents: isMobile ? 2 : 3,
     moreLinkText: (n) => `+${n} más`,
     moreLinkClick: "popover",
     locale: esLocale,
     buttonText: {
       today: 'Hoy',
       month: 'Mes',
-      week: 'Semana',
+      week: isMobile ? '3d' : 'Semana',
       day: 'Día',
       list: 'Lista'
     },
-    headerToolbar: { left: "prev,next today", center: "title", right: "timeGridWeek,dayGridMonth" }
-  }), [events]);
+    headerToolbar: isMobile
+      ? { left: "prev,next", center: "title", right: "timeGridThreeDay,dayGridMonth" }
+      : { left: "prev,next today", center: "title", right: "timeGridWeek,dayGridMonth" }
+  }), [events, isMobile]);
 
   const toastClass =
     toast?.type === "ok" ? "border-green-200 bg-green-50 text-green-900" :

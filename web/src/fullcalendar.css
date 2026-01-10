@@ -216,29 +216,27 @@
 
 @media (max-width: 640px) {
 
-  /* Toolbar: apilar elementos en columna */
+  /* Toolbar: una sola fila compacta */
   .fc .fc-toolbar {
-    flex-direction: column !important;
-    gap: 0.75rem !important;
-    padding: 0.5rem 0 !important;
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    padding: 0.25rem 0 !important;
   }
 
   .fc .fc-toolbar-chunk {
     display: flex;
-    justify-content: center;
-    width: 100%;
+    align-items: center;
   }
 
   .fc .fc-toolbar-title {
-    font-size: 1rem !important;
-    text-align: center;
-    order: -1;
+    font-size: 0.9rem !important;
+    font-weight: 600;
   }
 
-  /* Botones más compactos */
+  /* Botones compactos pero legibles */
   .fc .fc-button {
-    padding: 0.35rem 0.5rem !important;
-    font-size: 0.75rem !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.7rem !important;
     border-radius: 0.5rem !important;
   }
 
@@ -246,29 +244,40 @@
     gap: 2px;
   }
 
-  /* Cabecera de días más compacta */
+  /* Cabecera de días - más grande y legible */
   .fc .fc-col-header-cell-cushion {
-    font-size: 0.65rem !important;
-    padding: 4px 2px !important;
+    font-size: 0.75rem !important;
+    padding: 8px 4px !important;
+    font-weight: 600;
   }
 
-  /* Horas más pequeñas */
+  /* Horas - más grandes */
   .fc .fc-timegrid-axis-cushion {
-    font-size: 0.6rem !important;
-    padding: 2px !important;
+    font-size: 0.7rem !important;
+    padding: 4px !important;
   }
 
-  /* Eventos más compactos en móvil */
+  /* MÁS ESPACIO VERTICAL - slots más altos */
+  .fc .fc-timegrid-slot {
+    height: 2.5rem !important;
+  }
+
+  .fc .fc-timegrid-slot-lane {
+    min-height: 2.5rem !important;
+  }
+
+  /* Eventos legibles en móvil */
   .fc .fc-event {
-    padding: 1px 4px !important;
-    font-size: 0.6rem !important;
-    min-height: 14px !important;
-    border-left-width: 2px !important;
+    padding: 3px 6px !important;
+    font-size: 0.7rem !important;
+    min-height: 20px !important;
+    border-left-width: 3px !important;
   }
 
   .fc-timegrid-event .fc-event-main {
-    padding: 1px 3px !important;
-    font-size: 0.55rem !important;
+    padding: 2px 4px !important;
+    font-size: 0.65rem !important;
+    line-height: 1.3;
   }
 
   /* Popover ocupa más ancho en móvil */
