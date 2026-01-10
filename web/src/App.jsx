@@ -24,7 +24,13 @@ export default function App() {
   const [selectedColor, setSelectedColor] = useState("#6366f1");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [goToDate, setGoToDate] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const calendarRef = useRef(null);
+
+  // Filtrar eventos por nombre
+  const filteredEvents = searchQuery.trim()
+    ? events.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : events;
 
   // Navegar a una fecha específica
   function handleGoToDate(dateStr) {
@@ -320,7 +326,7 @@ export default function App() {
     eventResize: handleEventDrop,
     select: onSelect,
     eventClick: onEventClick,
-    events,
+    events: filteredEvents,
     datesSet: loadRange,
     height: "auto",
     nowIndicator: true,
@@ -343,9 +349,9 @@ export default function App() {
       list: 'Lista'
     },
     headerToolbar: isMobile
-      ? { left: "prev,next", center: "title", right: "timeGridThreeDay,dayGridMonth" }
-      : { left: "prev,next today", center: "title", right: "timeGridWeek,dayGridMonth" }
-  }), [events, isMobile]);
+      ? { left: "prev,next", center: "title", right: "timeGridThreeDay,timeGridDay,dayGridMonth" }
+      : { left: "prev,next today", center: "title", right: "timeGridWeek,timeGridDay,dayGridMonth" }
+  }), [filteredEvents, isMobile]);
 
   const toastClass =
     toast?.type === "ok" ? "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300" :
@@ -410,19 +416,59 @@ export default function App() {
             value={goToDate}
             onChange={(e) => handleGoToDate(e.target.value)}
             className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${darkMode
-                ? 'border-slate-600 bg-slate-700 text-white'
-                : 'border-slate-300 bg-white text-slate-900'
+              ? 'border-slate-600 bg-slate-700 text-white'
+              : 'border-slate-300 bg-white text-slate-900'
               }`}
           />
           <button
             onClick={() => handleGoToDate(new Date().toISOString().split('T')[0])}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${darkMode
-                ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              ? 'bg-indigo-600 text-white hover:bg-indigo-500'
+              : 'bg-indigo-600 text-white hover:bg-indigo-700'
               }`}
           >
             Hoy
           </button>
+        </div>
+
+        {/* Búsqueda de citas */}
+        <div className={`mt-3 flex items-center gap-3 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+          <div className="relative flex-1 max-w-sm">
+            <svg
+              className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar citas por nombre..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full rounded-lg border pl-10 pr-8 py-1.5 text-sm transition-colors ${darkMode
+                  ? 'border-slate-600 bg-slate-700 text-white placeholder:text-slate-400'
+                  : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
+                }`}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 ${darkMode ? 'text-slate-400' : 'text-slate-500'
+                  }`}
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <span className={`text-xs ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              {filteredEvents.length} resultado{filteredEvents.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
 
         <div className={`mt-4 rounded-2xl border p-4 shadow-sm transition-colors ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
