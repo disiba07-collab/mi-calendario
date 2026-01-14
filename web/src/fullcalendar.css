@@ -132,26 +132,52 @@
   font-size: 0.65rem;
 }
 
-/* Vista de mes (dayGrid) - asegurar que los títulos sean visibles */
+/* Vista de mes (dayGrid) - asegurar que los eventos y títulos sean visibles */
 .fc-daygrid-event {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background-color: #6366f1;
+  /* Color por defecto si no viene del evento */
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: 1px 2px;
 }
 
 .fc-daygrid-event .fc-event-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: inline !important;
+  color: #fff !important;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
+.fc-daygrid-event .fc-event-time {
+  color: #fff !important;
+  font-size: 0.65rem;
+  opacity: 0.9;
+}
+
+/* Ocultar el dot y usar el bloque completo */
 .fc-daygrid-event-dot {
   display: none;
 }
 
+/* Asegurar que el fondo del evento se aplique */
+.fc-daygrid-dot-event {
+  background-color: inherit;
+  padding: 2px 4px !important;
+}
+
+.fc-daygrid-dot-event .fc-event-title {
+  font-weight: 500;
+  color: #fff !important;
+}
+
 .fc-daygrid-block-event .fc-event-title {
   padding: 0 4px;
+  color: #fff !important;
 }
 
 .fc .fc-highlight {
