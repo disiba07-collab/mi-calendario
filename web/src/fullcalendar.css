@@ -134,14 +134,14 @@
 
 /* Vista de mes (dayGrid) - asegurar que los eventos y títulos sean visibles */
 .fc-daygrid-event {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background-color: #6366f1;
-  /* Color por defecto si no viene del evento */
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin: 1px 2px;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  background-color: #6366f1 !important;
+  border-radius: 4px !important;
+  padding: 2px 4px !important;
+  margin: 1px 2px !important;
+  border: none !important;
 }
 
 .fc-daygrid-event .fc-event-title {
@@ -161,13 +161,15 @@
 
 /* Ocultar el dot y usar el bloque completo */
 .fc-daygrid-event-dot {
-  display: none;
+  display: none !important;
 }
 
-/* Asegurar que el fondo del evento se aplique */
+/* Eventos de tipo dot en vista mes - forzar fondo visible */
 .fc-daygrid-dot-event {
-  background-color: inherit;
-  padding: 2px 4px !important;
+  background-color: var(--fc-event-bg-color, #6366f1) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  flex-direction: row !important;
 }
 
 .fc-daygrid-dot-event .fc-event-title {
