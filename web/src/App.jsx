@@ -425,7 +425,7 @@ export default function App() {
     headerToolbar: isMobile
       ? { left: "prev,next", center: "title", right: "timeGridThreeDay,timeGridDay,dayGridMonth" }
       : { left: "prev,next today", center: "title", right: "timeGridWeek,timeGridDay,dayGridMonth" }
-  }), [filteredEvents, isMobile]);
+  }), [filteredEvents, isMobile, currentWorker]);
 
   const toastClass =
     toast?.type === "ok" ? "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-900/30 dark:text-green-300" :
