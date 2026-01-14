@@ -553,7 +553,7 @@ export default function App() {
         </div>
 
         <div className={`mt-4 rounded-2xl border p-4 shadow-sm transition-colors ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'}`}>
-          <FullCalendar ref={calendarRef} {...calendarProps} />
+          <FullCalendar key={currentWorker} ref={calendarRef} {...calendarProps} />
         </div>
 
         <p className="mt-4 text-xs text-slate-500">

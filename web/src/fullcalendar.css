@@ -132,6 +132,28 @@
   font-size: 0.65rem;
 }
 
+/* Vista de mes (dayGrid) - asegurar que los títulos sean visibles */
+.fc-daygrid-event {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fc-daygrid-event .fc-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline !important;
+}
+
+.fc-daygrid-event-dot {
+  display: none;
+}
+
+.fc-daygrid-block-event .fc-event-title {
+  padding: 0 4px;
+}
+
 .fc .fc-highlight {
   background: rgba(15, 23, 42, 0.06);
 }
