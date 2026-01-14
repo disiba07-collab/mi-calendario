@@ -19,18 +19,47 @@ const TABLE = process.env.AIRTABLE_TABLE_NAME;
 // Healthcheck
 app.get("/health", (_, res) => res.json({ ok: true }));
 
-// Listar citas en rango (para pintar calendario)
+// Listar trabajadores únicos
+app.get("/api/trabajadores", async (req, res) => {
+  try {
+    const records = await base(TABLE).select({
+      fields: ["trabajador"],
+    }).all();
+
+    const trabajadores = [...new Set(
+      records
+        .map(r => r.get("trabajador"))
+        .filter(Boolean)
+    )].sort();
+
+    res.json(trabajadores);
+  } catch (e) {
+    res.status(500).json({ error: "Error listando trabajadores", detail: String(e) });
+  }
+});
+
+// Listar citas en rango (filtrado por trabajador)
 app.get("/api/citas", async (req, res) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, trabajador } = req.query;
     if (!from || !to) return res.status(400).json({ error: "from y to son obligatorios (ISO)" });
 
-    const records = await base(TABLE).select({
-      // Airtable formula: {inicio} >= from AND {inicio} <= to
-      filterByFormula: `AND(
+    let filterFormula = `AND(
+      IS_AFTER({inicio}, "${from}"),
+      IS_BEFORE({inicio}, "${to}")
+    )`;
+
+    // Si se especifica trabajador, filtrar por él
+    if (trabajador) {
+      filterFormula = `AND(
         IS_AFTER({inicio}, "${from}"),
-        IS_BEFORE({inicio}, "${to}")
-      )`,
+        IS_BEFORE({inicio}, "${to}"),
+        {trabajador} = "${trabajador}"
+      )`;
+    }
+
+    const records = await base(TABLE).select({
+      filterByFormula: filterFormula,
       sort: [{ field: "inicio", direction: "asc" }]
     }).all();
 
@@ -40,24 +69,27 @@ app.get("/api/citas", async (req, res) => {
       fin: r.get("fin"),
       nombre: r.get("nombre") || "Bloqueado",
       color: r.get("color") || "#6366f1",
-      tipo: r.get("tipo") || "cita"
+      tipo: r.get("tipo") || "cita",
+      trabajador: r.get("trabajador") || ""
     })));
   } catch (e) {
     res.status(500).json({ error: "Error listando citas", detail: String(e) });
   }
 });
 
-// Crear cita (con anti-solape simple)
+// Crear cita (con anti-solape por trabajador)
 app.post("/api/citas", async (req, res) => {
   try {
-    const { inicio, fin, nombre, tipo = "cita" } = req.body;
+    const { inicio, fin, nombre, tipo = "cita", trabajador } = req.body;
     if (!inicio || !fin) return res.status(400).json({ error: "inicio y fin son obligatorios" });
     if (tipo === "cita" && !nombre) return res.status(400).json({ error: "nombre es obligatorio para citas" });
+    if (!trabajador) return res.status(400).json({ error: "trabajador es obligatorio" });
 
-    // Solape: (inicio < fin_existente) AND (fin > inicio_existente)
+    // Solape: solo verificar dentro del mismo trabajador
     const overlap = await base(TABLE).select({
       maxRecords: 1,
       filterByFormula: `AND(
+        {trabajador} = "${trabajador}",
         IS_BEFORE({inicio}, "${fin}"),
         IS_AFTER({fin}, "${inicio}")
       )`
@@ -66,7 +98,7 @@ app.post("/api/citas", async (req, res) => {
     if (overlap.length) return res.status(409).json({ error: "Hueco ocupado" });
 
     const { color = tipo === "bloqueo" ? "#64748b" : "#6366f1" } = req.body;
-    const fields = { inicio, fin, tipo, color };
+    const fields = { inicio, fin, tipo, color, trabajador };
     if (nombre) fields.nombre = nombre;
 
     const created = await base(TABLE).create([{ fields }]);
@@ -80,23 +112,26 @@ app.post("/api/citas", async (req, res) => {
 app.put("/api/citas/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { inicio, fin, nombre } = req.body;
+    const { inicio, fin, nombre, trabajador } = req.body;
     if (!inicio || !fin || !nombre) return res.status(400).json({ error: "inicio, fin, nombre son obligatorios" });
 
-    // Verificar solape excluyendo la cita actual
+    // Verificar solape excluyendo la cita actual, dentro del mismo trabajador
+    const overlapFormula = trabajador
+      ? `AND(RECORD_ID() != "${id}", {trabajador} = "${trabajador}", IS_BEFORE({inicio}, "${fin}"), IS_AFTER({fin}, "${inicio}"))`
+      : `AND(RECORD_ID() != "${id}", IS_BEFORE({inicio}, "${fin}"), IS_AFTER({fin}, "${inicio}"))`;
+
     const overlap = await base(TABLE).select({
       maxRecords: 1,
-      filterByFormula: `AND(
-        RECORD_ID() != "${id}",
-        IS_BEFORE({inicio}, "${fin}"),
-        IS_AFTER({fin}, "${inicio}")
-      )`
+      filterByFormula: overlapFormula
     }).firstPage();
 
     if (overlap.length) return res.status(409).json({ error: "Hueco ocupado" });
 
     const { color = "#6366f1" } = req.body;
-    await base(TABLE).update([{ id, fields: { inicio, fin, nombre, color } }]);
+    const fields = { inicio, fin, nombre, color };
+    if (trabajador) fields.trabajador = trabajador;
+
+    await base(TABLE).update([{ id, fields }]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: "Error actualizando cita", detail: String(e) });
@@ -117,3 +152,4 @@ app.delete("/api/citas/:id", async (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
   console.log("API escuchando en puerto", process.env.PORT || 3000);
 });
+

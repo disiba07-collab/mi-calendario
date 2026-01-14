@@ -28,6 +28,39 @@ export default function App() {
   const [isBlockMode, setIsBlockMode] = useState(false);
   const calendarRef = useRef(null);
 
+  // Sistema de perfiles de trabajadores
+  const [currentWorker, setCurrentWorker] = useState(() => {
+    return localStorage.getItem('currentWorker') || null;
+  });
+  const [workersList, setWorkersList] = useState([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [newWorkerName, setNewWorkerName] = useState("");
+
+  // Cargar lista de trabajadores
+  useEffect(() => {
+    async function loadWorkers() {
+      try {
+        const r = await fetch(`${API}/api/trabajadores`);
+        const data = await r.json();
+        setWorkersList(data || []);
+        // Si no hay trabajador seleccionado, mostrar modal
+        if (!currentWorker) {
+          setShowProfileModal(true);
+        }
+      } catch (e) {
+        console.error("Error cargando trabajadores:", e);
+      }
+    }
+    loadWorkers();
+  }, []);
+
+  // Guardar trabajador en localStorage cuando cambie
+  useEffect(() => {
+    if (currentWorker) {
+      localStorage.setItem('currentWorker', currentWorker);
+    }
+  }, [currentWorker]);
+
   // Filtrar eventos por nombre
   const filteredEvents = searchQuery.trim()
     ? events.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -79,11 +112,14 @@ export default function App() {
   }, [darkMode]);
 
   async function loadRange(info) {
+    if (!currentWorker) return; // No cargar si no hay trabajador seleccionado
+
     setLoading(true);
     try {
       const from = info.startStr;
       const to = info.endStr;
-      const r = await fetch(`${API}/api/citas?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+      const url = `${API}/api/citas?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&trabajador=${encodeURIComponent(currentWorker)}`;
+      const r = await fetch(url);
       const data = await r.json();
       setEvents((data || []).map(c => {
         const isBlock = c.tipo === "bloqueo";
@@ -139,7 +175,8 @@ export default function App() {
       inicio: toISO(selectedDate),
       fin: toISO(endDate),
       tipo: isBlockMode ? "bloqueo" : "cita",
-      color: isBlockMode ? "#64748b" : selectedColor
+      color: isBlockMode ? "#64748b" : selectedColor,
+      trabajador: currentWorker
     };
     if (!isBlockMode) payload.nombre = nombreInput.trim();
 
@@ -422,12 +459,19 @@ export default function App() {
               )}
             </button>
 
-            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${darkMode
-              ? 'border-slate-600 bg-slate-800 text-slate-300'
-              : 'border-slate-200 bg-white text-slate-700'
-              }`}>
-              Online
-            </span>
+            {/* Perfil del trabajador */}
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className={`flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition-colors ${darkMode
+                ? 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {currentWorker || 'Seleccionar perfil'}
+            </button>
           </div>
         </div>
 
@@ -642,8 +686,8 @@ export default function App() {
                 onClick={handleModalConfirm}
                 disabled={!isBlockMode && !nombreInput.trim()}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${isBlockMode
-                    ? 'bg-slate-600 hover:bg-slate-700 focus:ring-slate-500/50'
-                    : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500/50'
+                  ? 'bg-slate-600 hover:bg-slate-700 focus:ring-slate-500/50'
+                  : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500/50'
                   }`}
               >
                 {modalData?.isEdit ? 'Guardar cambios' : (isBlockMode ? 'Bloquear' : 'Crear cita')}
@@ -782,6 +826,114 @@ export default function App() {
                 Eliminar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de selección de perfil */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className={`mx-4 w-full max-w-md rounded-2xl border p-6 shadow-2xl ${darkMode ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-white'
+            }`}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                  Seleccionar perfil
+                </h3>
+                <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Elige tu perfil o crea uno nuevo
+                </p>
+              </div>
+            </div>
+
+            {/* Lista de trabajadores existentes */}
+            {workersList.length > 0 && (
+              <div className="mb-4 space-y-2">
+                <p className={`text-xs font-medium uppercase tracking-wide ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Perfiles existentes
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {workersList.map((worker) => (
+                    <button
+                      key={worker}
+                      onClick={() => {
+                        setCurrentWorker(worker);
+                        setShowProfileModal(false);
+                        // Recargar calendario
+                        if (calendarRef.current) {
+                          calendarRef.current.getApi().refetchEvents();
+                        }
+                      }}
+                      className={`rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${currentWorker === worker
+                          ? (darkMode ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' : 'border-indigo-500 bg-indigo-50 text-indigo-700')
+                          : (darkMode ? 'border-slate-600 bg-slate-700 text-slate-300 hover:bg-slate-600' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50')
+                        }`}
+                    >
+                      {worker}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Crear nuevo perfil */}
+            <div className={`rounded-lg border p-4 ${darkMode ? 'border-slate-600 bg-slate-700/50' : 'border-slate-200 bg-slate-50'}`}>
+              <p className={`text-xs font-medium uppercase tracking-wide mb-2 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                Crear nuevo perfil
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newWorkerName}
+                  onChange={(e) => setNewWorkerName(e.target.value)}
+                  placeholder="Tu nombre..."
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${darkMode
+                      ? 'border-slate-600 bg-slate-800 text-white placeholder:text-slate-400'
+                      : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
+                    }`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newWorkerName.trim()) {
+                      setCurrentWorker(newWorkerName.trim());
+                      setWorkersList(prev => [...new Set([...prev, newWorkerName.trim()])].sort());
+                      setNewWorkerName("");
+                      setShowProfileModal(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (newWorkerName.trim()) {
+                      setCurrentWorker(newWorkerName.trim());
+                      setWorkersList(prev => [...new Set([...prev, newWorkerName.trim()])].sort());
+                      setNewWorkerName("");
+                      setShowProfileModal(false);
+                    }
+                  }}
+                  disabled={!newWorkerName.trim()}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Crear
+                </button>
+              </div>
+            </div>
+
+            {/* Botón cerrar (solo si ya hay perfil seleccionado) */}
+            {currentWorker && (
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className={`mt-4 w-full rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${darkMode
+                    ? 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </div>
       )}
