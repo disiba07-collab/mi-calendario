@@ -54,10 +54,15 @@ export default function App() {
     loadWorkers();
   }, []);
 
-  // Guardar trabajador en localStorage cuando cambie
+  // Guardar trabajador en localStorage y recargar calendario cuando cambie
   useEffect(() => {
     if (currentWorker) {
       localStorage.setItem('currentWorker', currentWorker);
+      // Limpiar eventos actuales y recargar
+      setEvents([]);
+      if (calendarRef.current) {
+        calendarRef.current.getApi().refetchEvents();
+      }
     }
   }, [currentWorker]);
 
@@ -870,8 +875,8 @@ export default function App() {
                         }
                       }}
                       className={`rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${currentWorker === worker
-                          ? (darkMode ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' : 'border-indigo-500 bg-indigo-50 text-indigo-700')
-                          : (darkMode ? 'border-slate-600 bg-slate-700 text-slate-300 hover:bg-slate-600' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50')
+                        ? (darkMode ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' : 'border-indigo-500 bg-indigo-50 text-indigo-700')
+                        : (darkMode ? 'border-slate-600 bg-slate-700 text-slate-300 hover:bg-slate-600' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50')
                         }`}
                     >
                       {worker}
@@ -893,8 +898,8 @@ export default function App() {
                   onChange={(e) => setNewWorkerName(e.target.value)}
                   placeholder="Tu nombre..."
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${darkMode
-                      ? 'border-slate-600 bg-slate-800 text-white placeholder:text-slate-400'
-                      : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
+                    ? 'border-slate-600 bg-slate-800 text-white placeholder:text-slate-400'
+                    : 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400'
                     }`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newWorkerName.trim()) {
@@ -927,8 +932,8 @@ export default function App() {
               <button
                 onClick={() => setShowProfileModal(false)}
                 className={`mt-4 w-full rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${darkMode
-                    ? 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                  ? 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                  : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
               >
                 Cancelar
